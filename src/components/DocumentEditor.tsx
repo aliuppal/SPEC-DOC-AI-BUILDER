@@ -34,7 +34,7 @@ export function DocumentEditor({ sections, onUpdateSection }: DocumentEditorProp
               onUpdateSection(section.id, newContent);
             }
           }}
-          className="text-gray-300 leading-relaxed whitespace-pre-wrap mb-4 p-3 rounded border border-transparent hover:border-gray-700 focus:outline-none focus:border-purple-500 focus:bg-purple-900/10 transition-colors min-h-[60px]"
+          className="text-gray-300 leading-relaxed whitespace-pre-wrap mb-4 p-3 rounded border border-transparent hover:border-gray-700 focus:outline-none focus:border-blue-500 focus:bg-blue-900/10 transition-colors min-h-[60px]"
         >
           {section.content}
         </div>

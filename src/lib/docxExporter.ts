@@ -58,7 +58,7 @@ function createSectionParagraphs(
   return paragraphs;
 }
 
-export async function exportToDocx(document: SpecDocument): Promise<void> {
+function createDocumentObject(document: SpecDocument): Document {
   const docType =
     document.doc_type === 'functional' ? 'Functional' : 'Technical';
 
@@ -99,7 +99,7 @@ export async function exportToDocx(document: SpecDocument): Promise<void> {
     createSectionParagraphs(section, paragraphs);
   });
 
-  const doc = new Document({
+  return new Document({
     sections: [
       {
         properties: {},
@@ -107,7 +107,15 @@ export async function exportToDocx(document: SpecDocument): Promise<void> {
       },
     ],
   });
+}
 
+export async function createPreviewDocx(document: SpecDocument): Promise<Blob> {
+  const doc = createDocumentObject(document);
+  return await Packer.toBlob(doc);
+}
+
+export async function exportToDocx(document: SpecDocument): Promise<void> {
+  const doc = createDocumentObject(document);
   const blob = await Packer.toBlob(doc);
 
   const fileName = `${document.title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.docx`;

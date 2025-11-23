@@ -93,7 +93,7 @@ export function AIPanel({ onApplyChanges, isProcessing }: AIPanelProps) {
     <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 to-gray-800">
       <div className="p-6 bg-gray-800 border-b border-gray-700 shadow-sm">
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg">
+          <div className="p-2 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <h2 className="text-xl font-bold text-white">AI Assistant</h2>
@@ -114,7 +114,7 @@ export function AIPanel({ onApplyChanges, isProcessing }: AIPanelProps) {
                 key={index}
                 onClick={() => setInstruction(suggestion)}
                 disabled={isProcessing}
-                className="w-full text-left px-4 py-2.5 bg-gray-800 rounded-lg border border-gray-700 hover:border-purple-500 hover:bg-gray-750 transition-colors text-sm text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full text-left px-4 py-2.5 bg-gray-800 rounded-lg border border-gray-700 hover:border-blue-500 hover:bg-gray-750 transition-colors text-sm text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {suggestion}
               </button>
@@ -122,9 +122,9 @@ export function AIPanel({ onApplyChanges, isProcessing }: AIPanelProps) {
           </div>
         </div>
 
-        <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4 text-sm text-purple-200">
+        <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 text-sm text-blue-200">
           <p className="font-medium mb-1">Tips for best results:</p>
-          <ul className="space-y-1 text-xs text-purple-300">
+          <ul className="space-y-1 text-xs text-blue-300">
             <li>• Be specific about which section to modify</li>
             <li>• Describe the content you want added or changed</li>
             <li>• Include relevant technical details if applicable</li>
@@ -147,7 +147,7 @@ export function AIPanel({ onApplyChanges, isProcessing }: AIPanelProps) {
                   className={`p-2 rounded-lg transition-all ${
                     isListening
                       ? 'bg-red-600 hover:bg-red-700 animate-pulse'
-                      : 'bg-purple-600 hover:bg-purple-700'
+                      : 'bg-blue-600 hover:bg-blue-700'
                   } text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                   title={isListening ? 'Stop listening' : 'Start voice input'}
                 >
@@ -157,7 +157,7 @@ export function AIPanel({ onApplyChanges, isProcessing }: AIPanelProps) {
                   <button
                     type="button"
                     onClick={toggleSpeech}
-                    className="p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white animate-pulse"
+                    className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white animate-pulse"
                     title="Stop speaking"
                   >
                     <VolumeX className="w-4 h-4" />
@@ -172,11 +172,11 @@ export function AIPanel({ onApplyChanges, isProcessing }: AIPanelProps) {
             onChange={(e) => setInstruction(e.target.value)}
             placeholder={isListening ? "Listening... Speak now!" : "Type or use voice input to describe changes..."}
             disabled={isProcessing || isListening}
-            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-gray-200 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none disabled:bg-gray-800 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-gray-200 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:bg-gray-800 disabled:cursor-not-allowed"
             rows={4}
           />
           {isListening && (
-            <p className="mt-2 text-xs text-purple-400 flex items-center gap-2">
+            <p className="mt-2 text-xs text-blue-400 flex items-center gap-2">
               <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
               Recording... Speak clearly into your microphone
             </p>
@@ -185,7 +185,7 @@ export function AIPanel({ onApplyChanges, isProcessing }: AIPanelProps) {
         <button
           type="submit"
           disabled={!instruction.trim() || isProcessing || isListening}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg font-medium hover:from-purple-700 hover:to-purple-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-500/50"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-blue-500/50"
         >
           {isProcessing ? (
             <>

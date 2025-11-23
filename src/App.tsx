@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { FileText, Download, Menu, X, Home, Upload } from 'lucide-react';
+import { FileText, Download, Menu, X, Home, Upload, Eye, Edit3 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { TemplateSelector } from './components/TemplateSelector';
 import { DocumentEditor } from './components/DocumentEditor';
+import { DocumentPreview } from './components/DocumentPreview';
 import { AIPanel } from './components/AIPanel';
 import { UploadModal } from './components/UploadModal';
 import { functionalTemplate } from './templates/functionalTemplate';
@@ -20,6 +21,7 @@ function App() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     const savedDoc = localStorage.getItem('currentDocument');
@@ -161,7 +163,7 @@ function App() {
               <p className="text-lg text-gray-300 mb-8">Generate SAP specification documents with AI assistance</p>
               <button
                 onClick={() => setShowUploadModal(true)}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg hover:shadow-purple-500/50 flex items-center gap-3 mx-auto"
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-blue-500/50 flex items-center gap-3 mx-auto"
               >
                 <Upload className="w-6 h-6" />
                 <span className="text-lg">Create New Document</span>
@@ -180,7 +182,7 @@ function App() {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <FileText className="w-7 h-7 text-purple-400" />
+              <FileText className="w-7 h-7 text-blue-400" />
               <div>
                 <h1 className="text-lg font-bold text-white">
                   SpecDoc AI Builder
@@ -201,6 +203,26 @@ function App() {
                 </div>
               )}
               <button
+                onClick={() => setShowPreview(!showPreview)}
+                className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  showPreview
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-700'
+                }`}
+              >
+                {showPreview ? (
+                  <>
+                    <Edit3 className="w-4 h-4" />
+                    <span className="text-sm">Edit Mode</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-4 h-4" />
+                    <span className="text-sm">Preview</span>
+                  </>
+                )}
+              </button>
+              <button
                 onClick={handleReset}
                 className="hidden sm:flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
               >
@@ -209,7 +231,7 @@ function App() {
               </button>
               <button
                 onClick={handleExport}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-colors shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-colors shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30"
               >
                 <Download className="w-4 h-4" />
                 <span className="text-sm font-medium">Save Document</span>
@@ -242,10 +264,14 @@ function App() {
         </div>
 
         <div className="flex-1 overflow-hidden bg-gray-900">
-          <DocumentEditor
-            sections={currentDocument.content}
-            onUpdateSection={handleUpdateSection}
-          />
+          {showPreview ? (
+            <DocumentPreview document={currentDocument} />
+          ) : (
+            <DocumentEditor
+              sections={currentDocument.content}
+              onUpdateSection={handleUpdateSection}
+            />
+          )}
         </div>
       </div>
     </div>
