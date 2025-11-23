@@ -1,335 +1,638 @@
 import type { DocumentSection } from '../types/document';
+import { ContentGenerator } from './contentGenerator';
 
 export async function processAIInstruction(
   instruction: string,
   sections: DocumentSection[]
 ): Promise<DocumentSection[]> {
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  // Simulate processing time for realistic UX
+  await new Promise((resolve) => setTimeout(resolve, 1500));
 
+  const generator = new ContentGenerator();
   const lowerInstruction = instruction.toLowerCase();
 
-  if (
-    lowerInstruction.includes('user role') ||
-    lowerInstruction.includes('permission') ||
-    lowerInstruction.includes('authorization')
-  ) {
-    return addUserRolesSection(sections);
+  // Determine document type from sections
+  const documentType = sections.some(s =>
+    s.title.toLowerCase().includes('technical') ||
+    s.title.toLowerCase().includes('development')
+  ) ? 'technical' : 'functional';
+
+  // Strategy 1: Add new sections based on instruction
+  if (shouldAddNewSection(lowerInstruction)) {
+    return addIntelligentSection(sections, instruction, generator, documentType);
   }
 
-  if (
-    lowerInstruction.includes('test') ||
-    lowerInstruction.includes('testing')
-  ) {
-    return enhanceTestingSection(sections);
+  // Strategy 2: Enhance existing sections
+  if (shouldEnhanceSection(lowerInstruction, sections)) {
+    return enhanceExistingSections(sections, instruction, generator, documentType);
   }
 
-  if (
-    lowerInstruction.includes('error') ||
-    lowerInstruction.includes('exception')
-  ) {
-    return enhanceErrorHandling(sections);
+  // Strategy 3: Modify specific section
+  const targetSection = identifyTargetSection(lowerInstruction, sections);
+  if (targetSection) {
+    return updateSpecificSection(sections, targetSection, instruction, generator, documentType);
   }
 
-  if (
-    lowerInstruction.includes('security') ||
-    lowerInstruction.includes('secure')
-  ) {
-    return addSecuritySection(sections);
-  }
-
-  if (
-    lowerInstruction.includes('migration') ||
-    lowerInstruction.includes('data migration')
-  ) {
-    return addDataMigrationSection(sections);
-  }
-
-  return enhanceGeneralContent(sections, instruction);
+  // Default: Enhance the most relevant section
+  return enhanceRelevantSection(sections, instruction, generator, documentType);
 }
 
-function addUserRolesSection(sections: DocumentSection[]): DocumentSection[] {
-  return sections.map((section) => {
-    if (section.id === '4' && section.subsections) {
-      const hasRolesSection = section.subsections.some(
-        (sub) => sub.title.toLowerCase().includes('role')
-      );
+function shouldAddNewSection(instruction: string): boolean {
+  const addKeywords = ['add', 'create', 'include', 'new section', 'additional'];
+  return addKeywords.some(keyword => instruction.includes(keyword));
+}
 
-      if (!hasRolesSection) {
-        return {
-          ...section,
-          subsections: [
-            ...section.subsections,
-            {
-              id: '4.5',
-              title: 'User Roles and Permissions',
-              content: `Define all user roles and their associated permissions:
+function shouldEnhanceSection(instruction: string, sections: DocumentSection[]): boolean {
+  const enhanceKeywords = ['enhance', 'expand', 'improve', 'detail', 'elaborate', 'comprehensive'];
+  return enhanceKeywords.some(keyword => instruction.includes(keyword));
+}
 
-Role: Business User
-• Access Level: Display and Create
-• Transactions: Display documents, Create requests
-• Restrictions: Cannot approve or delete
-• Authorization Object: Z_BUSINESS_USER
+function identifyTargetSection(instruction: string, sections: DocumentSection[]): DocumentSection | null {
+  const lowerInstruction = instruction.toLowerCase();
 
-Role: Manager
-• Access Level: Display, Create, Modify, Approve
-• Transactions: All business user transactions plus approval workflows
-• Restrictions: Cannot perform system configuration
-• Authorization Object: Z_MANAGER
+  // Try to find section by name mentioned in instruction
+  for (const section of sections) {
+    if (lowerInstruction.includes(section.title.toLowerCase())) {
+      return section;
+    }
 
-Role: System Administrator
-• Access Level: Full access
-• Transactions: All transactions including system configuration
-• Restrictions: None
-• Authorization Object: Z_SYS_ADMIN`,
-              level: 2,
-            },
-          ],
-        };
+    // Check subsections
+    if (section.subsections) {
+      for (const subsection of section.subsections) {
+        if (lowerInstruction.includes(subsection.title.toLowerCase())) {
+          return subsection;
+        }
       }
     }
-    return section;
-  });
+  }
+
+  return null;
 }
 
-function enhanceTestingSection(sections: DocumentSection[]): DocumentSection[] {
-  return sections.map((section) => {
-    if (section.title.toLowerCase().includes('test')) {
-      return {
-        ...section,
-        content: `Comprehensive testing strategy and detailed test scenarios.
+function addIntelligentSection(
+  sections: DocumentSection[],
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
+): DocumentSection[] {
+  const lowerInstruction = instruction.toLowerCase();
 
-Testing Phases:
-1. Unit Testing - Individual component testing
-2. Integration Testing - System integration validation
-3. User Acceptance Testing - Business process validation
-4. Performance Testing - Load and stress testing
-5. Security Testing - Authorization and data security validation`,
-        subsections: section.subsections?.map((sub) => {
-          if (sub.title.toLowerCase().includes('scenario')) {
-            return {
-              ...sub,
-              content: `Test Scenario 1: End-to-End Process Flow
-• Description: Validate complete business process from start to finish
-• Prerequisites: Master data configured, user roles assigned
-• Test Steps:
-  1. Login with business user credentials
-  2. Navigate to transaction [T-CODE]
-  3. Enter test data values
-  4. Execute the process
-  5. Verify output and results
-• Expected Result: Process completes successfully with correct output
-• Test Data: [Specify test data sets]
+  // Determine what type of section to add
+  if (lowerInstruction.includes('user role') || lowerInstruction.includes('authorization') || lowerInstruction.includes('security')) {
+    return addAuthorizationSection(sections, instruction, generator, documentType);
+  }
 
-Test Scenario 2: Error Handling Validation
-• Description: Verify system handles invalid inputs correctly
-• Prerequisites: System configured, error messages defined
-• Test Steps:
-  1. Attempt to process with missing mandatory fields
-  2. Try to exceed field length limits
-  3. Submit invalid data formats
-  4. Test authorization violations
-• Expected Result: System displays appropriate error messages without crashing
-• Test Data: Invalid data samples
+  if (lowerInstruction.includes('test') || lowerInstruction.includes('testing')) {
+    return addTestingSection(sections, instruction, generator, documentType);
+  }
 
-Test Scenario 3: Performance Validation
-• Description: Verify system performance under load
-• Prerequisites: Performance testing environment ready
-• Test Steps:
-  1. Execute process with minimum data volume
-  2. Execute with average data volume
-  3. Execute with maximum expected data volume
-  4. Monitor response times and resource usage
-• Expected Result: Response time within acceptable limits (<3 seconds)
-• Test Data: Large data sets (specify volume)`,
-            };
-          }
-          return sub;
-        }),
-      };
-    }
-    return section;
-  });
+  if (lowerInstruction.includes('error') || lowerInstruction.includes('exception')) {
+    return addErrorHandlingSection(sections, instruction, generator, documentType);
+  }
+
+  if (lowerInstruction.includes('performance') || lowerInstruction.includes('optimization')) {
+    return addPerformanceSection(sections, instruction, generator, documentType);
+  }
+
+  if (lowerInstruction.includes('data migration') || lowerInstruction.includes('migration')) {
+    return addDataMigrationSection(sections, instruction, generator, documentType);
+  }
+
+  if (lowerInstruction.includes('interface') || lowerInstruction.includes('integration')) {
+    return addInterfaceSection(sections, instruction, generator, documentType);
+  }
+
+  // Generic new section
+  return addGenericSection(sections, instruction, generator, documentType);
 }
 
-function enhanceErrorHandling(sections: DocumentSection[]): DocumentSection[] {
-  return sections.map((section) => {
-    if (
-      section.title.toLowerCase().includes('error') ||
-      section.id === '9'
-    ) {
-      return {
-        ...section,
-        subsections: [
-          ...(section.subsections || []),
-          {
-            id: `${section.id}.3`,
-            title: 'Error Handling Strategy',
-            content: `Comprehensive error handling approach:
-
-Error Categories:
-1. Validation Errors
-   • Field validation failures
-   • Business rule violations
-   • Data type mismatches
-   • Action: Display error message, allow correction
-
-2. System Errors
-   • Database errors
-   • Communication failures
-   • Resource unavailability
-   • Action: Log error, notify administrator, rollback transaction
-
-3. Integration Errors
-   • Interface communication failures
-   • Data mapping errors
-   • Timeout exceptions
-   • Action: Retry mechanism, error queue, alert integration team
-
-Error Message Standards:
-• Message Class: Z_CUSTOM_MESSAGES
-• Message Format: [Error Code] - [Clear Description] - [Resolution]
-• Example: E001 - Invalid purchase order number - Enter valid PO number
-
-Logging Requirements:
-• All errors logged to application log (SLG1)
-• Error details include: timestamp, user, transaction, error message
-• Retention period: 90 days`,
-            level: 2,
-          },
-        ],
-      };
-    }
-    return section;
-  });
-}
-
-function addSecuritySection(sections: DocumentSection[]): DocumentSection[] {
-  const securitySection: DocumentSection = {
-    id: '11',
+function addAuthorizationSection(
+  sections: DocumentSection[],
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
+): DocumentSection[] {
+  const newSection: DocumentSection = {
+    id: String(sections.length + 1),
     title: 'Security and Authorization',
-    content: 'Comprehensive security requirements and authorization strategy.',
+    content: generator.generateDetailedContent({
+      instruction,
+      documentType,
+      currentSection: { id: '', title: '', content: '', level: 1 },
+      allSections: sections
+    }),
     level: 1,
     subsections: [
       {
-        id: '11.1',
-        title: 'Authorization Concept',
-        content: `Security Model:
-• Role-Based Access Control (RBAC)
-• Principle of Least Privilege
-• Segregation of Duties (SoD)
+        id: `${sections.length + 1}.1`,
+        title: 'Authorization Objects and Roles',
+        content: `Authorization Configuration:
+
+Role-Based Access Control:
+• Define user roles with specific authorization profiles
+• Implement least privilege principle
+• Segregation of duties (SoD) controls
 
 Authorization Objects:
-• Object 1: Z_DISPLAY - Display authorization
-• Object 2: Z_CHANGE - Change authorization
-• Object 3: Z_APPROVE - Approval authorization
+• M_MATE_WRK - Material Master by Plant
+• M_MSEG_BWA - Goods Movements by Movement Type
+• S_TCODE - Transaction Code Authorization
 
 Field-Level Security:
 • Sensitive fields masked for unauthorized users
-• Audit trail for all data modifications
-• Encryption for sensitive data at rest and in transit`,
-        level: 2,
+• Audit trail for critical data changes`,
+        level: 2
       },
       {
-        id: '11.2',
-        title: 'Security Testing',
-        content: `Security Validation:
-• Authorization matrix testing
-• Segregation of duties validation
-• Penetration testing
-• Security audit compliance check
+        id: `${sections.length + 1}.2`,
+        title: 'Security Testing and Validation',
+        content: `Security Test Cases:
 
-Test Cases:
-• Verify unauthorized users cannot access restricted functions
-• Validate field-level security controls
-• Test audit trail captures all critical changes
-• Confirm encryption implementation`,
-        level: 2,
-      },
-    ],
+Test Scenario 1: Authorized User Access
+• User with proper authorization executes transaction successfully
+• All authorized functions accessible
+
+Test Scenario 2: Unauthorized Access Prevention
+• User without authorization receives clear error message
+• No data leakage or system access granted
+• Failed authorization attempts logged
+
+Test Scenario 3: Field-Level Security
+• Sensitive fields hidden/masked for unauthorized users
+• Data export restrictions enforced`,
+        level: 2
+      }
+    ]
   };
 
-  return [...sections, securitySection];
+  return [...sections, newSection];
 }
 
-function addDataMigrationSection(
-  sections: DocumentSection[]
+function addTestingSection(
+  sections: DocumentSection[],
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
 ): DocumentSection[] {
-  const migrationSection: DocumentSection = {
-    id: '12',
-    title: 'Data Migration Strategy',
-    content: 'Comprehensive approach to data migration from legacy systems.',
+  // Find or enhance existing testing section
+  const testingSectionIndex = sections.findIndex(s =>
+    s.title.toLowerCase().includes('test')
+  );
+
+  if (testingSectionIndex >= 0) {
+    return sections.map((section, index) => {
+      if (index === testingSectionIndex) {
+        return {
+          ...section,
+          content: generator.generateDetailedContent({
+            instruction,
+            documentType,
+            currentSection: section,
+            allSections: sections
+          }),
+          subsections: enhanceTestingSubsections(section, instruction, generator, documentType)
+        };
+      }
+      return section;
+    });
+  }
+
+  // Add new testing section if doesn't exist
+  const newSection: DocumentSection = {
+    id: String(sections.length + 1),
+    title: 'Testing Requirements and Strategy',
+    content: generator.generateTestingContent({
+      id: '',
+      title: 'Testing Requirements',
+      content: '',
+      level: 1
+    }, instruction),
     level: 1,
     subsections: [
       {
-        id: '12.1',
-        title: 'Migration Approach',
-        content: `Migration Strategy:
-• Phased approach by business unit
-• Parallel run period: 2 weeks
-• Cutover window: Weekend
-
-Source Systems:
-• Legacy System A: Customer master data
-• Legacy System B: Transaction history
-• Legacy System C: Reference data
-
-Data Volume Estimates:
-• Customer Records: 500,000
-• Transactions: 2,000,000
-• Reference Tables: 50 tables`,
-        level: 2,
+        id: `${sections.length + 1}.1`,
+        title: 'Unit Testing Scenarios',
+        content: 'Detailed unit test cases covering all functional requirements.',
+        level: 2
       },
       {
-        id: '12.2',
-        title: 'Data Mapping',
-        content: `Mapping Rules:
-
-Customer Master:
-• Source: LEGACY_CUSTOMER -> Target: KNA1
-• Field Mapping:
-  - CUST_ID -> KUNNR (with leading zeros)
-  - CUST_NAME -> NAME1
-  - ADDRESS -> STREET, CITY, POSTAL_CODE
-
-Transaction Data:
-• Source: LEGACY_ORDERS -> Target: VBAK/VBAP
-• Transformation Rules:
-  - Date format conversion: MMDDYYYY -> YYYYMMDD
-  - Currency conversion: Legacy currency to SAP currency
-  - Status mapping: Legacy status codes -> SAP status`,
-        level: 2,
+        id: `${sections.length + 1}.2`,
+        title: 'Integration Testing',
+        content: 'End-to-end integration test scenarios with dependent systems and modules.',
+        level: 2
       },
       {
-        id: '12.3',
-        title: 'Migration Testing',
-        content: `Testing Phases:
-1. Unit Testing: Validate individual migration scripts
-2. Integration Testing: End-to-end migration process
-3. Volume Testing: Full data volume migration
-4. Reconciliation: Source vs. Target validation
-
-Acceptance Criteria:
-• 100% of critical data migrated successfully
-• Data integrity validation passed
-• Reconciliation reports show <0.1% discrepancy
-• Performance within acceptable limits`,
-        level: 2,
-      },
-    ],
+        id: `${sections.length + 1}.3`,
+        title: 'User Acceptance Testing (UAT)',
+        content: 'Business user validation scenarios and acceptance criteria.',
+        level: 2
+      }
+    ]
   };
 
-  return [...sections, migrationSection];
+  return [...sections, newSection];
 }
 
-function enhanceGeneralContent(
+function addErrorHandlingSection(
   sections: DocumentSection[],
-  instruction: string
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
 ): DocumentSection[] {
-  return sections.map((section) => {
-    if (section.id === '2') {
+  const newSection: DocumentSection = {
+    id: String(sections.length + 1),
+    title: 'Error Handling and Exception Management',
+    content: generator.generateErrorHandlingContent({
+      id: '',
+      title: 'Error Handling',
+      content: '',
+      level: 1
+    }, instruction),
+    level: 1,
+    subsections: [
+      {
+        id: `${sections.length + 1}.1`,
+        title: 'Error Categories and Response',
+        content: 'Classification of errors and appropriate handling strategies for each category.',
+        level: 2
+      },
+      {
+        id: `${sections.length + 1}.2`,
+        title: 'Logging and Monitoring',
+        content: 'Application logging framework and error monitoring procedures.',
+        level: 2
+      }
+    ]
+  };
+
+  return [...sections, newSection];
+}
+
+function addPerformanceSection(
+  sections: DocumentSection[],
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
+): DocumentSection[] {
+  const newSection: DocumentSection = {
+    id: String(sections.length + 1),
+    title: 'Performance Optimization',
+    content: generator.generatePerformanceContent({
+      id: '',
+      title: 'Performance',
+      content: '',
+      level: 1
+    }, instruction),
+    level: 1,
+    subsections: [
+      {
+        id: `${sections.length + 1}.1`,
+        title: 'Database Optimization',
+        content: 'Index strategy, query optimization, and database performance tuning.',
+        level: 2
+      },
+      {
+        id: `${sections.length + 1}.2`,
+        title: 'Code Optimization',
+        content: 'ABAP code performance best practices and optimization techniques.',
+        level: 2
+      }
+    ]
+  };
+
+  return [...sections, newSection];
+}
+
+function addDataMigrationSection(
+  sections: DocumentSection[],
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
+): DocumentSection[] {
+  const newSection: DocumentSection = {
+    id: String(sections.length + 1),
+    title: 'Data Migration Strategy',
+    content: `Comprehensive Data Migration Plan:
+
+Migration Approach:
+• Phased migration by business unit or data category
+• Parallel run period to validate data accuracy
+• Cutover strategy with rollback plan
+
+Source Systems Analysis:
+• Legacy System A: Customer master data (500,000 records)
+• Legacy System B: Transaction history (2,000,000 records)
+• Legacy System C: Reference data (50 configuration tables)
+
+Data Mapping and Transformation:
+• Field-level mapping from source to target (SAP) tables
+• Data cleansing rules for data quality improvement
+• Transformation logic for format and business rule conversions
+• Unit of measure, currency, and date format standardization
+
+Migration Execution:
+• Extract data from source systems
+• Transform and validate data
+• Load data into SAP staging tables
+• Execute SAP standard or custom migration programs
+• Validate completeness and accuracy via reconciliation reports
+
+${instruction}`,
+    level: 1,
+    subsections: [
+      {
+        id: `${sections.length + 1}.1`,
+        title: 'Data Mapping Specifications',
+        content: `Detailed Field Mapping:
+
+Source → Target Mapping Tables:
+Customer Master: LEGACY_CUSTOMER → KNA1/KNA2
+Material Master: LEGACY_ITEM → MARA/MARC/MARD
+Vendor Master: LEGACY_VENDOR → LFA1/LFB1
+
+Transformation Rules:
+• Date Format: MM/DD/YYYY → YYYYMMDD (SAP internal)
+• Material Number: Remove spaces, pad with leading zeros to 18 characters
+• Vendor Number: Validate against existing vendors, create new if needed
+• Currency: Convert ISO codes to SAP currency keys (TCURC)`,
+        level: 2
+      },
+      {
+        id: `${sections.length + 1}.2`,
+        title: 'Migration Testing and Validation',
+        content: `Migration Testing Strategy:
+
+Test Phases:
+1. Unit Testing: Validate individual migration scripts with sample data
+2. Integration Testing: End-to-end migration of subset of data
+3. Volume Testing: Full volume migration in test environment
+4. User Acceptance Testing: Business validation of migrated data
+
+Validation Criteria:
+• 100% of critical data migrated successfully
+• Data integrity checks pass (referential integrity, business rules)
+• Reconciliation: Source count vs. Target count matches
+• Data quality: Duplicates removed, invalid data flagged
+• Performance: Migration completes within defined time window
+
+Reconciliation Reports:
+• Record counts by entity (customers, materials, transactions)
+• Value reconciliation (financial data balances)
+• Exception reports (rejected records with reasons)`,
+        level: 2
+      }
+    ]
+  };
+
+  return [...sections, newSection];
+}
+
+function addInterfaceSection(
+  sections: DocumentSection[],
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
+): DocumentSection[] {
+  const newSection: DocumentSection = {
+    id: String(sections.length + 1),
+    title: 'Interface and Integration Specifications',
+    content: generator.generateInterfaceSpecifications({
+      id: '',
+      title: 'Interfaces',
+      content: '',
+      level: 1
+    }, instruction),
+    level: 1,
+    subsections: [
+      {
+        id: `${sections.length + 1}.1`,
+        title: 'Inbound Interfaces',
+        content: 'Specifications for data flowing into SAP from external systems.',
+        level: 2
+      },
+      {
+        id: `${sections.length + 1}.2`,
+        title: 'Outbound Interfaces',
+        content: 'Specifications for data flowing from SAP to external systems.',
+        level: 2
+      }
+    ]
+  };
+
+  return [...sections, newSection];
+}
+
+function addGenericSection(
+  sections: DocumentSection[],
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
+): DocumentSection[] {
+  const newSection: DocumentSection = {
+    id: String(sections.length + 1),
+    title: deriveTitleFromInstruction(instruction),
+    content: generator.generateDetailedContent({
+      instruction,
+      documentType,
+      currentSection: { id: '', title: '', content: '', level: 1 },
+      allSections: sections
+    }),
+    level: 1
+  };
+
+  return [...sections, newSection];
+}
+
+function deriveTitleFromInstruction(instruction: string): string {
+  // Extract key topics from instruction
+  const lowerInstruction = instruction.toLowerCase();
+
+  if (lowerInstruction.includes('monitoring')) return 'Monitoring and Alerting';
+  if (lowerInstruction.includes('backup')) return 'Backup and Recovery';
+  if (lowerInstruction.includes('configuration')) return 'Configuration Management';
+  if (lowerInstruction.includes('deployment')) return 'Deployment Strategy';
+  if (lowerInstruction.includes('support')) return 'Support and Maintenance';
+  if (lowerInstruction.includes('training')) return 'Training and Documentation';
+
+  return 'Additional Requirements';
+}
+
+function enhanceExistingSections(
+  sections: DocumentSection[],
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
+): DocumentSection[] {
+  return sections.map(section => {
+    if (isSectionRelevant(section, instruction)) {
       return {
         ...section,
-        content: `${section.content}\n\nAdditional Enhancement Based on Request:\n${instruction}\n\nThis section has been enhanced to address the specific requirements mentioned in the AI instruction. Further details and specifications can be elaborated based on project needs.`,
+        content: generator.generateDetailedContent({
+          instruction,
+          documentType,
+          currentSection: section,
+          allSections: sections
+        }),
+        subsections: section.subsections?.map(sub => ({
+          ...sub,
+          content: enhanceSubsectionContent(sub, instruction, generator, documentType)
+        }))
+      };
+    }
+    return section;
+  });
+}
+
+function isSectionRelevant(section: DocumentSection, instruction: string): boolean {
+  const lowerInstruction = instruction.toLowerCase();
+  const lowerTitle = section.title.toLowerCase();
+
+  // Check for keyword matches
+  const keywords = lowerInstruction.split(' ').filter(word => word.length > 3);
+  return keywords.some(keyword => lowerTitle.includes(keyword)) ||
+         lowerInstruction.includes(lowerTitle);
+}
+
+function enhanceSubsectionContent(
+  subsection: DocumentSection,
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
+): string {
+  return generator.generateDetailedContent({
+    instruction,
+    documentType,
+    currentSection: subsection,
+    allSections: []
+  });
+}
+
+function enhanceTestingSubsections(
+  section: DocumentSection,
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
+): DocumentSection[] {
+  const baseSubsections = section.subsections || [];
+
+  // Add comprehensive testing subsections
+  const enhancedSubsections: DocumentSection[] = [
+    {
+      id: `${section.id}.1`,
+      title: 'Unit Testing Scenarios',
+      content: 'Comprehensive unit test cases with detailed test data and expected results.',
+      level: 2
+    },
+    {
+      id: `${section.id}.2`,
+      title: 'Integration Testing',
+      content: 'End-to-end integration testing scenarios across modules and systems.',
+      level: 2
+    },
+    {
+      id: `${section.id}.3`,
+      title: 'User Acceptance Testing (UAT)',
+      content: 'Business user validation scenarios with real-world data and workflows.',
+      level: 2
+    },
+    {
+      id: `${section.id}.4`,
+      title: 'Performance Testing',
+      content: 'Load testing, stress testing, and performance benchmarking scenarios.',
+      level: 2
+    },
+    {
+      id: `${section.id}.5`,
+      title: 'Negative Testing Scenarios',
+      content: 'Error handling validation with invalid inputs and edge cases.',
+      level: 2
+    }
+  ];
+
+  return enhancedSubsections;
+}
+
+function updateSpecificSection(
+  sections: DocumentSection[],
+  targetSection: DocumentSection,
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
+): DocumentSection[] {
+  return sections.map(section => {
+    if (section.id === targetSection.id) {
+      return {
+        ...section,
+        content: generator.generateDetailedContent({
+          instruction,
+          documentType,
+          currentSection: section,
+          allSections: sections
+        })
+      };
+    }
+
+    // Check subsections
+    if (section.subsections) {
+      return {
+        ...section,
+        subsections: section.subsections.map(sub => {
+          if (sub.id === targetSection.id) {
+            return {
+              ...sub,
+              content: generator.generateDetailedContent({
+                instruction,
+                documentType,
+                currentSection: sub,
+                allSections: sections
+              })
+            };
+          }
+          return sub;
+        })
+      };
+    }
+
+    return section;
+  });
+}
+
+function enhanceRelevantSection(
+  sections: DocumentSection[],
+  instruction: string,
+  generator: ContentGenerator,
+  documentType: 'functional' | 'technical'
+): DocumentSection[] {
+  const lowerInstruction = instruction.toLowerCase();
+
+  // Find the most relevant section based on instruction content
+  let targetSectionIndex = sections.findIndex(section =>
+    isSectionRelevant(section, instruction)
+  );
+
+  // If no specific section found, enhance "Business Requirements" or "Functional Requirements"
+  if (targetSectionIndex === -1) {
+    targetSectionIndex = sections.findIndex(s =>
+      s.title.toLowerCase().includes('requirement') ||
+      s.title.toLowerCase().includes('executive summary')
+    );
+  }
+
+  // Default to section 2 if still not found
+  if (targetSectionIndex === -1) {
+    targetSectionIndex = Math.min(1, sections.length - 1);
+  }
+
+  return sections.map((section, index) => {
+    if (index === targetSectionIndex) {
+      return {
+        ...section,
+        content: `${section.content}\n\n${generator.generateDetailedContent({
+          instruction,
+          documentType,
+          currentSection: section,
+          allSections: sections
+        })}`
       };
     }
     return section;
